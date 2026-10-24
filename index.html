@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electricity Bill Calculator - JSP | WT Assignment 5</title>
+  <meta name="description" content="Electricity Bill Calculator using JSP - WT Assignment 5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <div class="particles" id="particles"></div>
+
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">⚡</div>
+        <div>
+          <h1 class="header-title">Electricity Bill Calculator</h1>
+          <p class="header-sub">JSP Implementation • WT Assignment 5</p>
+        </div>
+      </div>
+      <span class="badge">JSP</span>
+    </header>
+
+    <main class="main-grid">
+      <!-- Input Form -->
+      <div class="card card-form">
+        <div class="card-header">
+          <span class="dot dot-green"></span>
+          <span class="card-label">Consumer Details</span>
+        </div>
+
+        <form id="billForm" onsubmit="return calculateBill(event)">
+          <div class="form-group">
+            <label for="consumerName">Consumer Name</label>
+            <input type="text" id="consumerName" placeholder="e.g. Aditya Wagh" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="consumerNo">Consumer No.</label>
+              <input type="text" id="consumerNo" placeholder="e.g. MH-2024-001" required>
+            </div>
+            <div class="form-group">
+              <label for="meterNo">Meter No.</label>
+              <input type="text" id="meterNo" placeholder="e.g. MTR-56789" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prevReading">Previous Reading (kWh)</label>
+              <input type="number" id="prevReading" placeholder="e.g. 1200" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="currReading">Current Reading (kWh)</label>
+              <input type="number" id="currReading" placeholder="e.g. 1450" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="billMonth">Billing Month</label>
+            <input type="month" id="billMonth" required>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Consumer Category</label>
+            <select id="category">
+              <option value="residential">🏠 Residential</option>
+              <option value="commercial">🏢 Commercial</option>
+              <option value="industrial">🏭 Industrial</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-calculate">⚡ Calculate Bill</button>
+        </form>
+
+        <div class="slab-info">
+          <div class="slab-title">📊 Tariff Slabs (Residential)</div>
+          <div class="slab-grid">
+            <div class="slab-item"><span>0 – 100 kWh</span><span class="slab-rate">₹3.50/unit</span></div>
+            <div class="slab-item"><span>101 – 300 kWh</span><span class="slab-rate">₹5.50/unit</span></div>
+            <div class="slab-item"><span>301 – 500 kWh</span><span class="slab-rate">₹7.00/unit</span></div>
+            <div class="slab-item"><span>Above 500 kWh</span><span class="slab-rate">₹8.50/unit</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div class="card card-result" id="resultCard" style="display:none">
+        <div class="card-header">
+          <span class="dot dot-amber"></span>
+          <span class="card-label">Bill Summary</span>
+        </div>
+
+        <div class="bill-header">
+          <div class="bill-icon">⚡</div>
+          <div class="bill-total-label">Total Amount</div>
+          <div class="bill-total" id="totalAmount">₹0.00</div>
+          <div class="bill-due" id="dueDate"></div>
+        </div>
+
+        <div class="bill-details">
+          <div class="bill-row"><span>Consumer Name</span><span id="rName">—</span></div>
+          <div class="bill-row"><span>Consumer No.</span><span id="rConsumerNo">—</span></div>
+          <div class="bill-row"><span>Meter No.</span><span id="rMeterNo">—</span></div>
+          <div class="bill-row"><span>Billing Period</span><span id="rPeriod">—</span></div>
+          <div class="bill-row"><span>Category</span><span id="rCategory">—</span></div>
+          <div class="bill-divider"></div>
+          <div class="bill-row"><span>Previous Reading</span><span id="rPrev">—</span></div>
+          <div class="bill-row"><span>Current Reading</span><span id="rCurr">—</span></div>
+          <div class="bill-row highlight"><span>Units Consumed</span><span id="rUnits">—</span></div>
+          <div class="bill-divider"></div>
+          <div class="bill-section-title">Slab Breakdown</div>
+          <div id="slabBreakdown"></div>
+          <div class="bill-divider"></div>
+          <div class="bill-row"><span>Energy Charge</span><span id="rEnergy">—</span></div>
+          <div class="bill-row"><span>Fixed Charge</span><span id="rFixed">—</span></div>
+          <div class="bill-row"><span>Electricity Duty (10%)</span><span id="rDuty">—</span></div>
+          <div class="bill-row"><span>Fuel Surcharge (2%)</span><span id="rFuel">—</span></div>
+          <div class="bill-divider"></div>
+          <div class="bill-row total"><span>Total Payable</span><span id="rTotal">—</span></div>
+        </div>
+
+        <button class="btn-print" onclick="window.print()">🖨️ Print Bill</button>
+        <button class="btn-reset" onclick="resetForm()">↺ New Calculation</button>
+      </div>
+
+      <!-- JSP Code Display -->
+      <div class="card card-code">
+        <div class="card-header">
+          <span class="dot dot-purple"></span>
+          <span class="card-label">JSP Source Code</span>
+        </div>
+        <div class="code-tabs">
+          <button class="code-tab active" onclick="showTab('jsp')">calculateBill.jsp</button>
+          <button class="code-tab" onclick="showTab('form')">index.jsp</button>
+        </div>
+        <pre class="code-block" id="jspCode"><code>&lt;%@ page language="java" contentType="text/html" %&gt;
+&lt;%@ page import="java.text.DecimalFormat" %&gt;
+&lt;%
+    // Read form parameters
+    String name = request.getParameter("consumerName");
+    String consumerNo = request.getParameter("consumerNo");
+    String meterNo = request.getParameter("meterNo");
+    int prev = Integer.parseInt(
+        request.getParameter("prevReading"));
+    int curr = Integer.parseInt(
+        request.getParameter("currReading"));
+    String category = request.getParameter("category");
+
+    int units = curr - prev;
+
+    // Calculate energy charge (slab-based)
+    double energyCharge = 0;
+    if (category.equals("residential")) {
+        if (units &lt;= 100)
+            energyCharge = units * 3.50;
+        else if (units &lt;= 300)
+            energyCharge = 100*3.50 + (units-100)*5.50;
+        else if (units &lt;= 500)
+            energyCharge = 100*3.50 + 200*5.50
+                          + (units-300)*7.00;
+        else
+            energyCharge = 100*3.50 + 200*5.50
+                          + 200*7.00 + (units-500)*8.50;
+    } else if (category.equals("commercial")) {
+        energyCharge = units * 8.00;
+    } else {
+        energyCharge = units * 7.50;
+    }
+
+    double fixed = category.equals("residential")
+        ? 50 : category.equals("commercial") ? 200 : 350;
+    double duty = energyCharge * 0.10;
+    double fuel = energyCharge * 0.02;
+    double total = energyCharge + fixed + duty + fuel;
+
+    DecimalFormat df = new DecimalFormat("#,##0.00");
+%&gt;
+
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+    &lt;h2&gt;Electricity Bill&lt;/h2&gt;
+    &lt;p&gt;Consumer: &lt;%= name %&gt;&lt;/p&gt;
+    &lt;p&gt;Units: &lt;%= units %&gt; kWh&lt;/p&gt;
+    &lt;p&gt;Energy: ₹&lt;%= df.format(energyCharge) %&gt;&lt;/p&gt;
+    &lt;p&gt;Fixed: ₹&lt;%= df.format(fixed) %&gt;&lt;/p&gt;
+    &lt;p&gt;Duty: ₹&lt;%= df.format(duty) %&gt;&lt;/p&gt;
+    &lt;p&gt;Fuel: ₹&lt;%= df.format(fuel) %&gt;&lt;/p&gt;
+    &lt;h3&gt;Total: ₹&lt;%= df.format(total) %&gt;&lt;/h3&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        <pre class="code-block" id="formCode" style="display:none"><code>&lt;%@ page language="java" contentType="text/html" %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Electricity Bill Calculator - JSP&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;⚡ Electricity Bill Calculator&lt;/h1&gt;
+
+    &lt;form action="calculateBill.jsp" method="POST"&gt;
+        &lt;label&gt;Consumer Name:&lt;/label&gt;
+        &lt;input type="text" name="consumerName"
+               required /&gt;&lt;br&gt;
+
+        &lt;label&gt;Consumer No:&lt;/label&gt;
+        &lt;input type="text" name="consumerNo"
+               required /&gt;&lt;br&gt;
+
+        &lt;label&gt;Meter No:&lt;/label&gt;
+        &lt;input type="text" name="meterNo"
+               required /&gt;&lt;br&gt;
+
+        &lt;label&gt;Previous Reading (kWh):&lt;/label&gt;
+        &lt;input type="number" name="prevReading"
+               min="0" required /&gt;&lt;br&gt;
+
+        &lt;label&gt;Current Reading (kWh):&lt;/label&gt;
+        &lt;input type="number" name="currReading"
+               min="0" required /&gt;&lt;br&gt;
+
+        &lt;label&gt;Category:&lt;/label&gt;
+        &lt;select name="category"&gt;
+            &lt;option value="residential"&gt;
+                Residential
+            &lt;/option&gt;
+            &lt;option value="commercial"&gt;
+                Commercial
+            &lt;/option&gt;
+            &lt;option value="industrial"&gt;
+                Industrial
+            &lt;/option&gt;
+        &lt;/select&gt;&lt;br&gt;
+
+        &lt;button type="submit"&gt;
+            Calculate Bill
+        &lt;/button&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      </div>
+    </main>
+
+    <footer class="footer">
+      WT Assignment 5 &nbsp;|&nbsp; Electricity Bill Calculator &nbsp;|&nbsp; JSP &nbsp;|&nbsp; WET TY Batch 26
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
